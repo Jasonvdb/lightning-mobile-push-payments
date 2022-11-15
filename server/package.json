@@ -1,0 +1,24 @@
+{
+  "name": "push-notification-server",
+  "version": "1.0.0",
+  "description": "Push notification server for lightning wallet",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jasonvdb/lightning-mobile-push-payments.git"
+  },
+  "keywords": [
+    "bitcoin",
+    "lightning"
+  ],
+  "author": "Jason",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jasonvdb/lightning-mobile-push-payments/issues"
+  },
+  "homepage": "https://github.com/Jasonvdb/lightning-mobile-push-payments#readme",
+  "dependencies": {
+    "node-pushnotifications": "^2.0.3"
+  }
+}
