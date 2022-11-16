@@ -7,41 +7,82 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+    "e2e:ios-build": "detox build --configuration ios",
+    "e2e:ios-test": "detox test --configuration ios --cleanup",
+    "lint:check": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "reinstall": "cd ../lib/ && yarn install && yarn build && cd ../example/ && yarn add ../lib && yarn rn-setup",
+    "clean": "rm -rf node_modules ios/Pods ios/Podfile.lock ios/build && yarn install && cd ios && pod deintegrate && pod install && cd ../",
+    "rn-setup": "node rn-setup.js"
   },
   "dependencies": {
     "@react-native-community/push-notification-ios": "^1.10.1",
-    "@synonymdev/react-native-ldk": "^0.0.73",
+    "@react-native-async-storage/async-storage": "^1.17.6",
+    "@react-native-clipboard/clipboard": "^1.10.0",
+    "@synonymdev/react-native-ldk": "latest",
+    "assert": "^2.0.0",
+    "bip32": "^2.0.6",
+    "bip39": "^3.0.4",
+    "bitcoinjs-lib": "^6.0.1",
+    "buffer": "^6.0.3",
+    "events": "^1.1.1",
+    "process": "^0.11.10",
     "react": "18.1.0",
-    "react-native": "0.70.5"
+    "react-native": "0.70.5",
+    "react-native-crypto": "^2.2.0",
+    "react-native-fs": "^2.20.0",
+    "react-native-keychain": "^8.1.0",
+    "react-native-randombytes": "^3.6.1",
+    "react-native-tcp-socket": "^5.6.2",
+    "readable-stream": "^4.0.0",
+    "rn-electrum-client": "git+http://git@github.com/synonymdev/react-native-electrum-client#a32a292d4e4918a04d280137e24e5961c74c543f",
+    "stream-browserify": "^3.0.0",
+    "vm-browserify": "^1.1.2"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
     "@babel/runtime": "^7.12.5",
-    "@react-native-community/eslint-config": "^2.0.0",
-    "@tsconfig/react-native": "^2.0.2",
-    "@types/jest": "^26.0.23",
-    "@types/react": "^18.0.21",
-    "@types/react-native": "^0.70.6",
+    "@react-native-community/eslint-config": "^3.0.2",
+    "@types/jest": "^28.1.2",
+    "@types/react-native": "^0.67.8",
     "@types/react-test-renderer": "^18.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.37.0",
-    "@typescript-eslint/parser": "^5.37.0",
+    "@typescript-eslint/eslint-plugin": "^5.28.0",
     "babel-jest": "^26.6.3",
-    "eslint": "^7.32.0",
+    "detox": "^19.7.1",
+    "eslint": "^8.17.0",
+    "eslint-config-prettier": "^8.5.0",
     "jest": "^26.6.3",
-    "metro-react-native-babel-preset": "0.72.3",
-    "react-test-renderer": "18.1.0",
-    "typescript": "^4.8.3"
+    "jest-circus": "^26.6.3",
+    "metro-react-native-babel-preset": "^0.67.0",
+    "prettier": "^2.6.2",
+    "react-test-renderer": "17.0.2",
+    "rn-nodeify": "^10.3.0",
+    "typescript": "^3.9.7"
   },
   "jest": {
-    "preset": "react-native",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
-    ]
+    "preset": "react-native"
+  },
+  "detox": {
+    "extends": "./e2e/detoxrc.json"
+  },
+  "react-native": {
+    "crypto": "react-native-crypto",
+    "_stream_transform": "readable-stream/transform",
+    "_stream_readable": "readable-stream/readable",
+    "_stream_writable": "readable-stream/writable",
+    "_stream_duplex": "readable-stream/duplex",
+    "_stream_passthrough": "readable-stream/passthrough",
+    "stream": "stream-browserify",
+    "vm": "vm-browserify"
+  },
+  "browser": {
+    "crypto": "react-native-crypto",
+    "_stream_transform": "readable-stream/transform",
+    "_stream_readable": "readable-stream/readable",
+    "_stream_writable": "readable-stream/writable",
+    "_stream_duplex": "readable-stream/duplex",
+    "_stream_passthrough": "readable-stream/passthrough",
+    "stream": "stream-browserify",
+    "vm": "vm-browserify"
   }
 }
