@@ -16,6 +16,9 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		96B1210529243CE2007F1581 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B1210429243CE2007F1581 /* NotificationService.swift */; };
 		96B1210929243CE3007F1581 /* LnPushNotifications.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 96B1210229243CE2007F1581 /* LnPushNotifications.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		96B1210F2924EDB2007F1581 /* LdkReceive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B1210E2924EDB2007F1581 /* LdkReceive.swift */; };
+		96B12116292516D2007F1581 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B12115292516D1007F1581 /* Helpers.swift */; };
+		B7DC84299D08D4F5FA80E348 /* libPods-LnPushNotifications.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 94C0D80EDE2553643CF32C99 /* libPods-LnPushNotifications.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,13 +67,18 @@
 		5709B34CF0A7D63546082F79 /* Pods-LnPush.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LnPush.release.xcconfig"; path = "Target Support Files/Pods-LnPush/Pods-LnPush.release.xcconfig"; sourceTree = "<group>"; };
 		5B7EB9410499542E8C5724F5 /* Pods-LnPush-LnPushTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LnPush-LnPushTests.debug.xcconfig"; path = "Target Support Files/Pods-LnPush-LnPushTests/Pods-LnPush-LnPushTests.debug.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-LnPush.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-LnPush.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6A13C8F37690200D82D56576 /* Pods-LnPushNotifications.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LnPushNotifications.release.xcconfig"; path = "Target Support Files/Pods-LnPushNotifications/Pods-LnPushNotifications.release.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = LnPush/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-LnPush-LnPushTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LnPush-LnPushTests.release.xcconfig"; path = "Target Support Files/Pods-LnPush-LnPushTests/Pods-LnPush-LnPushTests.release.xcconfig"; sourceTree = "<group>"; };
+		94C0D80EDE2553643CF32C99 /* libPods-LnPushNotifications.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-LnPushNotifications.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		96B120FB29242840007F1581 /* hermes.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = hermes.xcframework; path = "Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.xcframework"; sourceTree = "<group>"; };
 		96B120FD29242BD6007F1581 /* LnPush.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = LnPush.entitlements; path = LnPush/LnPush.entitlements; sourceTree = "<group>"; };
 		96B1210229243CE2007F1581 /* LnPushNotifications.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LnPushNotifications.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		96B1210429243CE2007F1581 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		96B1210629243CE3007F1581 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		96B1210E2924EDB2007F1581 /* LdkReceive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LdkReceive.swift; sourceTree = "<group>"; };
+		96B12115292516D1007F1581 /* Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
+		A5A2B5F12C2C3CB5F5B5FC06 /* Pods-LnPushNotifications.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LnPushNotifications.debug.xcconfig"; path = "Target Support Files/Pods-LnPushNotifications/Pods-LnPushNotifications.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -95,6 +103,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B7DC84299D08D4F5FA80E348 /* libPods-LnPushNotifications.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -139,6 +148,7 @@
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				5DCACB8F33CDC322A6C60F78 /* libPods-LnPush.a */,
 				19F6CBCC0A4E27FBF8BF4A61 /* libPods-LnPush-LnPushTests.a */,
+				94C0D80EDE2553643CF32C99 /* libPods-LnPushNotifications.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -180,7 +190,9 @@
 			isa = PBXGroup;
 			children = (
 				96B1210429243CE2007F1581 /* NotificationService.swift */,
+				96B1210E2924EDB2007F1581 /* LdkReceive.swift */,
 				96B1210629243CE3007F1581 /* Info.plist */,
+				96B12115292516D1007F1581 /* Helpers.swift */,
 			);
 			path = LnPushNotifications;
 			sourceTree = "<group>";
@@ -192,6 +204,8 @@
 				5709B34CF0A7D63546082F79 /* Pods-LnPush.release.xcconfig */,
 				5B7EB9410499542E8C5724F5 /* Pods-LnPush-LnPushTests.debug.xcconfig */,
 				89C6BE57DB24E9ADA2F236DE /* Pods-LnPush-LnPushTests.release.xcconfig */,
+				A5A2B5F12C2C3CB5F5B5FC06 /* Pods-LnPushNotifications.debug.xcconfig */,
+				6A13C8F37690200D82D56576 /* Pods-LnPushNotifications.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -248,9 +262,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 96B1210A29243CE3007F1581 /* Build configuration list for PBXNativeTarget "LnPushNotifications" */;
 			buildPhases = (
+				3C7556A73EFDB17A67B722A1 /* [CP] Check Pods Manifest.lock */,
 				96B120FE29243CE2007F1581 /* Sources */,
 				96B120FF29243CE2007F1581 /* Frameworks */,
 				96B1210029243CE2007F1581 /* Resources */,
+				F15BB8990F4E709D5146AEEF /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -362,6 +378,28 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-LnPush/Pods-LnPush-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		3C7556A73EFDB17A67B722A1 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-LnPushNotifications-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 		A55EABD7B0C7F3A422A6CC61 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -440,6 +478,23 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-LnPush/Pods-LnPush-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		F15BB8990F4E709D5146AEEF /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-LnPushNotifications/Pods-LnPushNotifications-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-LnPushNotifications/Pods-LnPushNotifications-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-LnPushNotifications/Pods-LnPushNotifications-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		F6A41C54EA430FDDC6A6ED99 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -501,6 +556,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				96B1210529243CE2007F1581 /* NotificationService.swift in Sources */,
+				96B12116292516D2007F1581 /* Helpers.swift in Sources */,
+				96B1210F2924EDB2007F1581 /* LdkReceive.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -774,6 +831,7 @@
 		};
 		96B1210B29243CE3007F1581 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A5A2B5F12C2C3CB5F5B5FC06 /* Pods-LnPushNotifications.debug.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -813,6 +871,7 @@
 		};
 		96B1210C29243CE3007F1581 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6A13C8F37690200D82D56576 /* Pods-LnPushNotifications.release.xcconfig */;
 			buildSettings = {
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
