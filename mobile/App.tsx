@@ -1,5 +1,5 @@
 import './shim';
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement, useEffect, useState, useRef } from 'react';
 import {
 	Alert,
 	Button,
@@ -10,6 +10,7 @@ import {
 	StyleSheet,
 	Text,
 	View,
+	AppState,
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {
@@ -36,6 +37,41 @@ let onChannelSubscription: EmitterSubscription | undefined;
 const App = (): ReactElement => {
 	const [message, setMessage] = useState('...');
 	const [nodeStarted, setNodeStarted] = useState(false);
+
+	const appState = useRef(AppState.currentState);
+  	const [appStateVisible, setAppStateVisible] = useState(appState.current);
+
+	  useEffect(() => {
+		const subscription = AppState.addEventListener("change", nextAppState => {
+		  if (
+			appState.current.match(/inactive|background/) &&
+			nextAppState === "active"
+		  ) {
+			setMessage("Starting LDK");
+			//App in foreground
+			setTimeout(async () => {
+			// Setup LDK 
+			const setupResponse = await setupLdk();
+			if (setupResponse.isErr()) {
+				setMessage(setupResponse.error.message);
+				return;
+			}
+
+			setNodeStarted(true);
+			setMessage(setupResponse.value);
+			}, 1000)
+		  } else {
+			ldk.reset().catch(console.error);
+		  }
+	
+		  appState.current = nextAppState;
+		  setAppStateVisible(appState.current);
+		});
+	
+		return () => {
+		  subscription.remove();
+		};
+	  }, []);
 
 	useEffect(() => {
 		//Restarting LDK on each code update causes constant errors.
