@@ -19,7 +19,6 @@ class LdkReceive {
   //Config required to setup below objects
   var chainMonitor: ChainMonitor? //TODO lazy load chainMonitor
   var keysManager: KeysManager?
-  var channelManager: ChannelManager?
   var userConfig: UserConfig?
   var networkGraph: NetworkGraph?
   var rapidGossipSync: RapidGossipSync?
@@ -34,8 +33,9 @@ class LdkReceive {
   static var onPayment: ((Int) -> Void)!
   static var onError: ((String) -> Void)!
   static var sharedDirectory: URL!
+  static var channelManager: ChannelManager?
 
-  func start(onChannel: @escaping (String) -> Void, onPayment: @escaping (Int) -> Void, onError: @escaping (String) -> Void) {
+  func start(header: String, height: Int, onChannel: @escaping (String) -> Void, onPayment: @escaping (Int) -> Void, onError: @escaping (String) -> Void) {
     LdkReceive.sharedDirectory = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.LnPushPayments")?.appendingPathComponent("ldk").appendingPathComponent("wallet0")
     
     var isDir: ObjCBool = false
@@ -129,7 +129,7 @@ class LdkReceive {
           enableP2PGossip: false
       )
       
-      channelManager = channelManagerConstructor!.channelManager
+      LdkReceive.channelManager = channelManagerConstructor!.channelManager
       channelManagerConstructor!.chain_sync_completed(persister: channelManagerPersister, scorer: nil)
   //    peerManager = channelManagerConstructor!.peerManager
       peerHandler = channelManagerConstructor!.getTCPPeerHandler()
@@ -139,16 +139,23 @@ class LdkReceive {
         return onError("Failed to connect to peer")
       }
       
-      let ourNodeId = Data(channelManager!.get_our_node_id()).hexEncodedString()
+      let ourNodeId = Data(LdkReceive.channelManager!.get_our_node_id()).hexEncodedString()
       
       print("Our node ID \(ourNodeId)")
       
-      if let channel = channelManager!.list_channels().first {
-        return onError("Channel ready: \(channel.get_is_channel_ready()) \nChannel Usable: \(channel.get_is_usable())")
+      //Sync to tip
+      LdkReceive.channelManager!.as_Confirm().best_block_updated(header: header.hexaBytes, height: UInt32(height))
+      chainMonitor!.as_Confirm().best_block_updated(header: header.hexaBytes, height: UInt32(height))
+      
+      sleep(10)
+
+      if let channel = LdkReceive.channelManager!.list_channels().first {
+        print("Channel ready: \(channel.get_is_channel_ready()) \nChannel Usable: \(channel.get_is_usable())")
       }
+      
+//      onError("Channels: \(LdkReceive.channelManager!.list_channels().count)")
 //      onError("No channels yet")
       
-  //    sleep(20)
   //    completion(101, "Peers: \(peerManager!.get_peer_node_ids().map { Data($0).hexEncodedString() })")
     } catch {
       onError(error.localizedDescription)
@@ -162,7 +169,7 @@ class LdkReceive {
     channelManagerConstructor = nil
     chainMonitor = nil
     keysManager = nil
-    channelManager = nil
+    LdkReceive.channelManager = nil
     userConfig = nil
     networkGraph = nil
     peerManager = nil
@@ -278,6 +285,8 @@ class LdkChannelManagerPersister: Persister, ExtendedChannelManagerPersister {
 //            ]
           
           //TODO end service
+          
+          LdkReceive.onPayment(Int(paymentReceived.getAmount_msat() / 1000))
             return
         
         case .PaymentForwarded:
@@ -285,7 +294,7 @@ class LdkChannelManagerPersister: Persister, ExtendedChannelManagerPersister {
         case .PendingHTLCsForwardable:
           let pendingHTLCsForwardable = event.getValueAsPendingHTLCsForwardable()!
                       
-          //MARK: accept payment
+          LdkReceive.channelManager?.process_pending_htlc_forwards()
           return
         
         case .PaymentClaimed:

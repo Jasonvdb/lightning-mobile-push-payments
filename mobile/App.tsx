@@ -248,7 +248,8 @@ const App = (): ReactElement => {
 
 								let msg = '';
 
-								listChannels.value.forEach(({outbound_capacity_sat, inbound_capacity_sat, is_channel_ready, is_usable}) => {
+								listChannels.value.forEach(({channel_id, outbound_capacity_sat, inbound_capacity_sat, is_channel_ready, is_usable}) => {
+									msg = `${msg}${channel_id}\n`
 									msg = `${msg}Can spend: ${outbound_capacity_sat} sats\n`
 									msg = `${msg}Can receive: ${inbound_capacity_sat} sats\n`
 									msg = `${msg}Ready: ${is_channel_ready ? '✅' : '❌'}\n`
@@ -274,6 +275,7 @@ const App = (): ReactElement => {
 						onPress={async (): Promise<void> => {
 							try {
 								const createPaymentRequest = await ldk.createPaymentRequest({
+									amountSats: 123,//TODO remove and let sender choose
 									description: 'TODO push url',
 									expiryDeltaSeconds: 60 * 60,
 								});

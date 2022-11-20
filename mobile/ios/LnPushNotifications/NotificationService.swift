@@ -26,13 +26,18 @@ class NotificationService: UNNotificationServiceExtension {
     guard let aps = request.content.userInfo["aps"] as? AnyObject,
         let alert = aps["alert"] as? AnyObject,
         let payload = alert["payload"] as? AnyObject,
-        let hash = payload["hash"] as? String,
+        let header = payload["header"] as? String,
         let height = payload["height"] as? Int else {
       //No blockdata, just give up
       return contentHandler(bestAttemptContent)
     }
-   
-    ldk.start { channelId in
+//    bestAttemptContent.title = "Block data"
+//    bestAttemptContent.body = "\(height) : \(header)"
+//    contentHandler(bestAttemptContent)
+//
+//    return
+    
+    ldk.start(header: header, height: height) { channelId in
       bestAttemptContent.title = "Channel opened"
       bestAttemptContent.body = "\(channelId)"
       sleep(3)
@@ -41,13 +46,13 @@ class NotificationService: UNNotificationServiceExtension {
     } onPayment: { sats in
       bestAttemptContent.title = "Payment received"
       bestAttemptContent.body = "\(sats) sats ⚡"
-      sleep(3)
+      sleep(5)
 //      self.ldk.reset()
       contentHandler(bestAttemptContent)
     } onError: { errorMessage in
       bestAttemptContent.title = "Lightning error"
       bestAttemptContent.body = "\(errorMessage)"
-      sleep(3)
+      sleep(5)
 //      self.ldk.reset()
       contentHandler(bestAttemptContent)
     }

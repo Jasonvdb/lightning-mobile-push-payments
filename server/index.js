@@ -25,8 +25,8 @@ const title = 'Incoming payment';
 const body = 'Please open app and ask sender to try again.'
 
 const blockData = {
-    height: 123,
-    hash: 'abc123'
+    height: 364,
+    header: '00000030d6060261674709d9d6e63031dc7e9f5f2e98fe16d10f7e300a3fbb03122ca33ef5f8ca628bc2aeb6803c1427664c5fd76a1f9652c9f693c868913a3a8c084a2c11967a63ffff7f2000000000'
 };
 
 const data = {
