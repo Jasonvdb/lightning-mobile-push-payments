@@ -21,7 +21,7 @@ class NotificationService: UNNotificationServiceExtension {
       return
     }
 
-    //TODO accept channels and payments
+    //TODO accept channels or payments depending on the payload
     
     guard let aps = request.content.userInfo["aps"] as? AnyObject,
         let alert = aps["alert"] as? AnyObject,
@@ -31,25 +31,21 @@ class NotificationService: UNNotificationServiceExtension {
       //No blockdata, just give up
       return contentHandler(bestAttemptContent)
     }
-    
-    //TODO check we have a channel
-    
-    //Spin up LDK
-    ldk.start { [weak self] satsReceived, errorMessage in
-      guard let self = self else { return }
-
-      if let error = errorMessage {
-        bestAttemptContent.title = "Channel opened"
-        bestAttemptContent.body = "\(error)"
-        return contentHandler(bestAttemptContent)
-      }
-      
+   
+    ldk.start { channelId in
+      bestAttemptContent.title = "Channel opened"
+      bestAttemptContent.body = "\(channelId)"
       self.ldk.reset()
-
-      //Deliver final notification
+      contentHandler(bestAttemptContent)
+    } onPayment: { sats in
       bestAttemptContent.title = "Payment received"
-      bestAttemptContent.body = "\(satsReceived) sats ⚡"
-
+      bestAttemptContent.body = "\(sats) sats ⚡"
+      self.ldk.reset()
+      contentHandler(bestAttemptContent)
+    } onError: { errorMessage in
+      bestAttemptContent.title = "Lightning error"
+      bestAttemptContent.body = "\(errorMessage)"
+      self.ldk.reset()
       contentHandler(bestAttemptContent)
     }
   }

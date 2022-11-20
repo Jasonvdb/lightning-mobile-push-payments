@@ -7,7 +7,7 @@ export const peers = {
 	lnd: {
 		pubKey:
 			'0242c4451deb6266c2cf4593b891597529b73b1d2f98f7994a0ef420bfe1fd9b6c',
-		address: '127.0.0.1',
+		address: '192.168.0.105',
 		port: 9735,
 	},
 	// bt: {

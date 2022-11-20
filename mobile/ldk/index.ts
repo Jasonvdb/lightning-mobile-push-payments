@@ -28,6 +28,7 @@ import {
 } from '../utils/helpers';
 import { EAccount } from '../utils/types';
 import * as bitcoin from 'bitcoinjs-lib';
+import { Alert } from 'react-native';
 
 /**
  * Retrieves data from local storage.
@@ -99,6 +100,8 @@ export const syncLdk = async (): Promise<Result<string>> => {
  */
 export const setupLdk = async (): Promise<Result<string>> => {
 	try {
+		const iosSharedDirectory = await RNFS.pathForGroup('group.LnPushPayments');
+
 		await ldk.reset();
 		const genesisHash = await getBlockHashFromHeight({
 			height: 0,
@@ -108,8 +111,10 @@ export const setupLdk = async (): Promise<Result<string>> => {
 		}
 		const account = await getAccount();
 		const storageRes = await lm.setBaseStoragePath(
-			`${RNFS.DocumentDirectoryPath}/ldk/`,
+			`${iosSharedDirectory}/ldk/`,
 		);
+
+		// alert(`${iosSharedDirectory}/ldk/`);
 		if (storageRes.isErr()) {
 			return err(storageRes.error);
 		}

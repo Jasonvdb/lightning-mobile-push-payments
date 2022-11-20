@@ -110,9 +110,7 @@ const App = (): ReactElement => {
 	useEffect(() => {
 		const type = 'register';
 		PushNotificationIOS.addEventListener(type, (token) => {
-		  alert(JSON.stringify(token))
-		  console.log(token);
-	
+		  console.log(`Push token: ${token}`);	
 		  setMessage('Registered for push notifications');
 		});
 		
@@ -213,23 +211,13 @@ const App = (): ReactElement => {
 								}
 
 								let msg = '';
-								// Sort Channels
-								await Promise.all(
-									listChannels.value.map(async (channel) => {
-										const sorted = Object.keys(channel)
-											.sort()
-											.reduce((obj, key) => {
-												obj[key] = channel[key];
-												return obj;
-											}, {});
-										// Append channel info to msg.
-										await Promise.all(
-											Object.keys(sorted).map((key) => {
-												msg += `${key}: ${sorted[key]}\n`;
-											}),
-										);
-									}),
-								);
+
+								listChannels.value.forEach(({outbound_capacity_sat, inbound_capacity_sat, is_channel_ready, is_usable}) => {
+									msg = `${msg}Can spend: ${outbound_capacity_sat} sats\n`
+									msg = `${msg}Can receive: ${inbound_capacity_sat} sats\n`
+									msg = `${msg}Ready: ${is_channel_ready ? '✅' : '❌'}\n`
+									msg = `${msg}Usable: ${is_usable ? '✅' : '❌'}\n\n`
+								});
 
 								setMessage(msg);
 							} catch (e) {
@@ -347,6 +335,7 @@ const styles = StyleSheet.create({
 	},
 	text: {
 		textAlign: 'center',
+		color: 'gray'
 	},
 	logModal: {
 		paddingTop: 40,

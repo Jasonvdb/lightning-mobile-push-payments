@@ -30,10 +30,35 @@ class LdkReceive {
   var ldkNetwork: LDKNetwork?
   var ldkCurrency: LDKCurrency?
   
-  static var completion: ((Int, String?) -> Void)?
+  static var onChannel: ((String) -> Void)?
+  static var onPayment: ((Int) -> Void)?
+  static var onError: ((String) -> Void)?
 
-  func start(completion: @escaping (Int, String?) -> Void) {
-    LdkReceive.completion = completion
+  func start(onChannel: @escaping (String) -> Void, onPayment: @escaping (Int) -> Void, onError: @escaping (String) -> Void) {
+    let sharedContainerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.LnPushPayments")?.appendingPathComponent("ldk").appendingPathComponent("wallet0")
+    
+    var isDir: ObjCBool = false
+    guard FileManager.default.fileExists(atPath: sharedContainerURL!.path, isDirectory: &isDir) else  {
+      return onError("No existing wallet directory found found")
+    }
+    
+    LdkReceive.onChannel = onChannel
+    LdkReceive.onPayment = onPayment
+    LdkReceive.onError = onError
+    
+    //Check we have all files we need to startup LDK
+    let seedFile = sharedContainerURL!.appendingPathComponent("seed")
+    let channelManagerFile = sharedContainerURL!.appendingPathComponent("channel_manager.bin")
+    
+    guard FileManager.default.fileExists(atPath: seedFile.path) else  {
+      return onError("No existing seed found")
+    }
+    guard FileManager.default.fileExists(atPath: channelManagerFile.path) else  {
+      return onError("No channel manager found")
+    }
+        
+    let seed = [UInt8](try! Data(contentsOf: seedFile))
+    
     chainMonitor = ChainMonitor(
         chain_source: Option_FilterZ(value: filter),
         broadcaster: broadcaster,
@@ -41,12 +66,11 @@ class LdkReceive {
         feeest: feeEstimator,
         persister: persister
     )
-    
+
     print("Creating new channel manager")
     let blockHash = "2223513fd485a4459804fe6c9b6a2b1ed73e025dfb968e28db2a2e4e0caaf3ec"
     let blockHeight = 155
     ldkNetwork = LDKNetwork_Regtest
-    let seed = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" //TODO read actual seed from disk
     let minChannelHandshakeDepth = 1
     let announcedChannels = false
     
@@ -57,13 +81,12 @@ class LdkReceive {
     
     let seconds = UInt64(NSDate().timeIntervalSince1970)
     let nanoSeconds = UInt32.init(truncating: NSNumber(value: seconds * 1000 * 1000))
-    let seedBytes = String(seed).hexaBytes
 
-    guard seedBytes.count == 32 else {
-        return completion(0, "Invalid node seed")
+    guard seed.count == 32 else {
+        return onError("Invalid node seed")
     }
 
-    keysManager = KeysManager(seed: String(seed).hexaBytes, starting_time_secs: seconds, starting_time_nanos: nanoSeconds)
+    keysManager = KeysManager(seed: seed, starting_time_secs: seconds, starting_time_nanos: nanoSeconds)
     
     userConfig = UserConfig()
     userConfig!.set_accept_inbound_channels(val: true) //Accept channels if BT is trying to open it
@@ -104,11 +127,11 @@ class LdkReceive {
     
     let res = peerHandler!.connect(address: String(address), port: UInt16(port), theirNodeId: String(pubKey).hexaBytes)
     if !res {
-      return completion(0, "Failed to connect to peer")
+      return onError("Failed to connect to peer")
     }
     
     let ourNodeId = Data(channelManager!.get_our_node_id()).hexEncodedString()
-    print("ourNodeId: \(ourNodeId)")
+    onError("ourNodeId: \(ourNodeId)")
     
 //    sleep(20)
 //    completion(101, "Peers: \(peerManager!.get_peer_node_ids().map { Data($0).hexEncodedString() })")
@@ -165,7 +188,7 @@ class LdkPersister: Persist {
     private func handleChannel(_ channel_id: OutPoint, _ data: ChannelMonitor) -> LDKChannelMonitorUpdateStatus {
       let channelId = Data(channel_id.to_channel_id()).hexEncodedString()
       
-      LdkReceive.completion?(0, "Channel ID: \(channelId)")
+      LdkReceive.onChannel?(channelId)
       
       do {
         //TODO

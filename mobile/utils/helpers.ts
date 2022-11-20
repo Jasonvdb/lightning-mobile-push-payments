@@ -70,6 +70,7 @@ export const getAccount = async (accountName?: string): Promise<TAccount> => {
  */
 export const getCurrentAccountName = async (): Promise<string> => {
 	const currentAccountName = await getItem(EAccount.currentAccountKey);
+
 	return currentAccountName ?? EAccount.name;
 };
 
@@ -79,12 +80,14 @@ export const getCurrentAccountName = async (): Promise<string> => {
  */
 export const createNewAccount = async (): Promise<Result<TAccount>> => {
 	try {
+		const iosSharedDirectory = await RNFS.pathForGroup('group.LnPushPayments');
+
 		let emptyAccount = false;
 		const currentAccountName = await getCurrentAccountName();
 		let num = Number(currentAccountName.replace('wallet', ''));
-		while (emptyAccount === false) {
+		while (emptyAccount === false) {			
 			const accountExists = await RNFS.exists(
-				`${RNFS.DocumentDirectoryPath}/ldk/wallet${num}`,
+				`${iosSharedDirectory}/ldk/wallet${num}`,
 			);
 			if (accountExists) {
 				num++;

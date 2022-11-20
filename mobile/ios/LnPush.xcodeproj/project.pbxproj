@@ -78,6 +78,7 @@
 		96B1210629243CE3007F1581 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		96B1210E2924EDB2007F1581 /* LdkReceive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LdkReceive.swift; sourceTree = "<group>"; };
 		96B12115292516D1007F1581 /* Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
+		96B12117292AB4F6007F1581 /* LnPushNotifications.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LnPushNotifications.entitlements; sourceTree = "<group>"; };
 		A5A2B5F12C2C3CB5F5B5FC06 /* Pods-LnPushNotifications.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LnPushNotifications.debug.xcconfig"; path = "Target Support Files/Pods-LnPushNotifications/Pods-LnPushNotifications.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -189,6 +190,7 @@
 		96B1210329243CE2007F1581 /* LnPushNotifications */ = {
 			isa = PBXGroup;
 			children = (
+				96B12117292AB4F6007F1581 /* LnPushNotifications.entitlements */,
 				96B1210429243CE2007F1581 /* NotificationService.swift */,
 				96B1210E2924EDB2007F1581 /* LdkReceive.swift */,
 				96B1210629243CE3007F1581 /* Info.plist */,
@@ -839,6 +841,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = LnPushNotifications/LnPushNotifications.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -879,6 +882,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = LnPushNotifications/LnPushNotifications.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;

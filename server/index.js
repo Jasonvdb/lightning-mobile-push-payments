@@ -19,9 +19,7 @@ const settings = {
 
 const push = new PushNotifications(settings);
 
-
-
-const token = 'c83520b3522858a13b945ecaeb7db2bc6faa24e997d5f1bedd20d89bc7d00dc4';
+const deviceToken = 'c83520b3522858a13b945ecaeb7db2bc6faa24e997d5f1bedd20d89bc7d00dc4';
 
 const title = 'Incoming payment';
 const body = 'Please open app and ask sender to try again.'
@@ -52,7 +50,7 @@ const data = {
 };
 
 // Or you could use it as a promise:
-push.send([token], data)
+push.send([deviceToken], data)
     .then((results) => { 
         console.log('SUCCESS');
         console.log(JSON.stringify(results));
