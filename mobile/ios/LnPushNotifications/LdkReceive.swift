@@ -30,15 +30,16 @@ class LdkReceive {
   var ldkNetwork: LDKNetwork?
   var ldkCurrency: LDKCurrency?
   
-  static var onChannel: ((String) -> Void)?
-  static var onPayment: ((Int) -> Void)?
-  static var onError: ((String) -> Void)?
+  static var onChannel: ((String) -> Void)!
+  static var onPayment: ((Int) -> Void)!
+  static var onError: ((String) -> Void)!
+  static var sharedDirectory: URL!
 
   func start(onChannel: @escaping (String) -> Void, onPayment: @escaping (Int) -> Void, onError: @escaping (String) -> Void) {
-    let sharedContainerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.LnPushPayments")?.appendingPathComponent("ldk").appendingPathComponent("wallet0")
+    LdkReceive.sharedDirectory = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.LnPushPayments")?.appendingPathComponent("ldk").appendingPathComponent("wallet0")
     
     var isDir: ObjCBool = false
-    guard FileManager.default.fileExists(atPath: sharedContainerURL!.path, isDirectory: &isDir) else  {
+    guard FileManager.default.fileExists(atPath: LdkReceive.sharedDirectory.path, isDirectory: &isDir) else  {
       return onError("No existing wallet directory found found")
     }
     
@@ -47,8 +48,8 @@ class LdkReceive {
     LdkReceive.onError = onError
     
     //Check we have all files we need to startup LDK
-    let seedFile = sharedContainerURL!.appendingPathComponent("seed")
-    let channelManagerFile = sharedContainerURL!.appendingPathComponent("channel_manager.bin")
+    let seedFile = LdkReceive.sharedDirectory.appendingPathComponent("seed")
+    let channelManagerFile = LdkReceive.sharedDirectory.appendingPathComponent("channel_manager.bin")
     
     guard FileManager.default.fileExists(atPath: seedFile.path) else  {
       return onError("No existing seed found")
@@ -105,42 +106,59 @@ class LdkReceive {
     channelHandshakeLimits.set_max_minimum_depth(val: UInt32(minChannelHandshakeDepth))
     userConfig!.set_channel_handshake_limits(val: channelHandshakeLimits)
     
-    //TODO this creates a new node when we actually need to restore
-    channelManagerConstructor = ChannelManagerConstructor(
-        network: ldkNetwork!,
-        config: userConfig!,
-        current_blockchain_tip_hash: String(blockHash).hexaBytes,
-        current_blockchain_tip_height: UInt32(blockHeight),
-        keys_interface: keysManager!.as_KeysInterface(),
-        fee_estimator: feeEstimator,
-        chain_monitor: chainMonitor!,
-        net_graph: networkGraph,
-        tx_broadcaster: broadcaster,
-        logger: logger,
-        enableP2PGossip: false
-    )
-    
-    channelManager = channelManagerConstructor!.channelManager
-    channelManagerConstructor!.chain_sync_completed(persister: channelManagerPersister, scorer: nil)
-//    peerManager = channelManagerConstructor!.peerManager
-    peerHandler = channelManagerConstructor!.getTCPPeerHandler()
-    
-    let res = peerHandler!.connect(address: String(address), port: UInt16(port), theirNodeId: String(pubKey).hexaBytes)
-    if !res {
-      return onError("Failed to connect to peer")
+    do {
+      let storedChannelManager = try Data(contentsOf: LdkReceive.sharedDirectory.appendingPathComponent("channel_manager.bin").standardizedFileURL)
+      
+      var channelMonitorsSerialized: Array<[UInt8]> = []
+      let channelFiles = try FileManager.default.contentsOfDirectory(at: LdkReceive.sharedDirectory.appendingPathComponent("channels"), includingPropertiesForKeys: nil)
+      for channelFile in channelFiles {
+          print("Loading channel from file \(channelFile.lastPathComponent)")
+          channelMonitorsSerialized.append([UInt8](try Data(contentsOf: channelFile.standardizedFileURL)))
+      }
+      
+      channelManagerConstructor = try ChannelManagerConstructor(
+          channel_manager_serialized: [UInt8](storedChannelManager),
+          channel_monitors_serialized: channelMonitorsSerialized,
+          keys_interface: keysManager!.as_KeysInterface(),
+          fee_estimator: feeEstimator,
+          chain_monitor: chainMonitor!,
+          filter: filter,
+          net_graph_serialized: nil,
+          tx_broadcaster: broadcaster,
+          logger: logger,
+          enableP2PGossip: false
+      )
+      
+      channelManager = channelManagerConstructor!.channelManager
+      channelManagerConstructor!.chain_sync_completed(persister: channelManagerPersister, scorer: nil)
+  //    peerManager = channelManagerConstructor!.peerManager
+      peerHandler = channelManagerConstructor!.getTCPPeerHandler()
+      
+      let res = peerHandler!.connect(address: String(address), port: UInt16(port), theirNodeId: String(pubKey).hexaBytes)
+      if !res {
+        return onError("Failed to connect to peer")
+      }
+      
+      let ourNodeId = Data(channelManager!.get_our_node_id()).hexEncodedString()
+      
+      print("Our node ID \(ourNodeId)")
+      
+      if let channel = channelManager!.list_channels().first {
+        return onError("Channel ready: \(channel.get_is_channel_ready()) \nChannel Usable: \(channel.get_is_usable())")
+      }
+//      onError("No channels yet")
+      
+  //    sleep(20)
+  //    completion(101, "Peers: \(peerManager!.get_peer_node_ids().map { Data($0).hexEncodedString() })")
+    } catch {
+      onError(error.localizedDescription)
     }
-    
-    let ourNodeId = Data(channelManager!.get_our_node_id()).hexEncodedString()
-    onError("ourNodeId: \(ourNodeId)")
-    
-//    sleep(20)
-//    completion(101, "Peers: \(peerManager!.get_peer_node_ids().map { Data($0).hexEncodedString() })")
   }
   
   func reset() {
     print("LDK reset")
     
-    channelManagerConstructor?.interrupt()
+//    channelManagerConstructor?.interrupt()
     channelManagerConstructor = nil
     chainMonitor = nil
     keysManager = nil
@@ -188,17 +206,17 @@ class LdkPersister: Persist {
     private func handleChannel(_ channel_id: OutPoint, _ data: ChannelMonitor) -> LDKChannelMonitorUpdateStatus {
       let channelId = Data(channel_id.to_channel_id()).hexEncodedString()
       
-      LdkReceive.onChannel?(channelId)
-      
+
       do {
-        //TODO
-//            guard let channelStoragePath = Ldk.channelStoragePath?.appendingPathComponent("\(channelId).bin") else {
-//                throw "Channel storage path not set"
-//            }
-//
-//            try Data(data.write()).write(to: channelStoragePath)
-          
-          return LDKChannelMonitorUpdateStatus_Completed
+        let channelStoragePath = LdkReceive.sharedDirectory.appendingPathComponent("channels").appendingPathComponent("\(channelId).bin")
+        
+        if !FileManager().fileExists(atPath: channelStoragePath.path) {
+          LdkReceive.onChannel?(channelId)
+        }
+        
+        try Data(data.write()).write(to: channelStoragePath)
+        
+        return LDKChannelMonitorUpdateStatus_Completed
       } catch {
         //TODO force close channel if this fails
         return LDKChannelMonitorUpdateStatus_PermanentFailure
@@ -302,22 +320,17 @@ class LdkChannelManagerPersister: Persister, ExtendedChannelManagerPersister {
     }
     
     override func persist_manager(channel_manager: ChannelManager) -> Result_NoneErrorZ {
-//        guard let managerStorage = Ldk.accountStoragePath?.appendingPathComponent(LdkFileNames.channel_manager.rawValue) else {
-//            return Result_NoneErrorZ.ok() // TODO find out which error to return here
-//        }
-//
-//        do {
-//            try Data(channel_manager.write()).write(to: managerStorage)
-//            print("Persisted channel manager to disk")
-//
-//            return Result_NoneErrorZ.ok()
-//        } catch {
-//            print("Error. Failed to persist channel manager to disk Error \(error.localizedDescription).")
-//            return Result_NoneErrorZ.err(e: LDKIOError_Other)
-//        }
-      
-      //TODO
-      return Result_NoneErrorZ.ok()
+      let managerStorage = LdkReceive.sharedDirectory.appendingPathComponent("channel_manager.bin")
+
+      do {
+          try Data(channel_manager.write()).write(to: managerStorage)
+          print("Persisted channel manager to disk")
+
+          return Result_NoneErrorZ.ok()
+      } catch {
+          print("Error. Failed to persist channel manager to disk Error \(error.localizedDescription).")
+          return Result_NoneErrorZ.err(e: LDKIOError_Other)
+      }
     }
     
     override func persist_graph(network_graph: NetworkGraph) -> Result_NoneErrorZ {

@@ -35,17 +35,20 @@ class NotificationService: UNNotificationServiceExtension {
     ldk.start { channelId in
       bestAttemptContent.title = "Channel opened"
       bestAttemptContent.body = "\(channelId)"
-      self.ldk.reset()
+      sleep(3)
+//      self.ldk.reset()
       contentHandler(bestAttemptContent)
     } onPayment: { sats in
       bestAttemptContent.title = "Payment received"
       bestAttemptContent.body = "\(sats) sats ⚡"
-      self.ldk.reset()
+      sleep(3)
+//      self.ldk.reset()
       contentHandler(bestAttemptContent)
     } onError: { errorMessage in
       bestAttemptContent.title = "Lightning error"
       bestAttemptContent.body = "\(errorMessage)"
-      self.ldk.reset()
+      sleep(3)
+//      self.ldk.reset()
       contentHandler(bestAttemptContent)
     }
   }
