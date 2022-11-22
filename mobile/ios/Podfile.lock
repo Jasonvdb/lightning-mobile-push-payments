@@ -367,10 +367,16 @@ PODS:
     - React-Core
   - RNKeychain (8.1.1):
     - React-Core
+  - RNQrGenerator (1.2.1):
+    - React
+    - ZXingObjC
   - SocketRocket (0.6.0)
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
     - Yoga (~> 1.14)
+  - ZXingObjC (3.6.5):
+    - ZXingObjC/All (= 3.6.5)
+  - ZXingObjC/All (3.6.5)
 
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
@@ -436,6 +442,7 @@ DEPENDENCIES:
   - "RNCPushNotificationIOS (from `../node_modules/@react-native-community/push-notification-ios`)"
   - RNFS (from `../node_modules/react-native-fs`)
   - RNKeychain (from `../node_modules/react-native-keychain`)
+  - RNQrGenerator (from `../node_modules/rn-qr-generator`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -455,6 +462,7 @@ SPEC REPOS:
     - OpenSSL-Universal
     - SocketRocket
     - YogaKit
+    - ZXingObjC
 
 EXTERNAL SOURCES:
   boost:
@@ -535,6 +543,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-fs"
   RNKeychain:
     :path: "../node_modules/react-native-keychain"
+  RNQrGenerator:
+    :path: "../node_modules/rn-qr-generator"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -591,9 +601,11 @@ SPEC CHECKSUMS:
   RNCPushNotificationIOS: 87b8d16d3ede4532745e05b03c42cff33a36cc45
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNKeychain: ff836453cba46938e0e9e4c22e43d43fa2c90333
+  RNQrGenerator: 0aa6c40e3f2e15a9cbaec9480b7028c339f89b66
   SocketRocket: fccef3f9c5cedea1353a9ef6ada904fde10d6608
   Yoga: eca980a5771bf114c41a754098cd85e6e0d90ed7
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
+  ZXingObjC: fdbb269f25dd2032da343e06f10224d62f537bdb
 
 PODFILE CHECKSUM: 7055c9a64d6f51ced20a6dc623a7520ce36a192b
 

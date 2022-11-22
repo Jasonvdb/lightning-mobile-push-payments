@@ -16,9 +16,9 @@
     "rn-setup": "node rn-setup.js"
   },
   "dependencies": {
-    "@react-native-community/push-notification-ios": "^1.10.1",
     "@react-native-async-storage/async-storage": "^1.17.6",
     "@react-native-clipboard/clipboard": "^1.10.0",
+    "@react-native-community/push-notification-ios": "^1.10.1",
     "@synonymdev/react-native-ldk": "latest",
     "assert": "^2.0.0",
     "bip32": "^2.0.6",
@@ -36,6 +36,7 @@
     "react-native-tcp-socket": "^5.6.2",
     "readable-stream": "^4.0.0",
     "rn-electrum-client": "git+http://git@github.com/synonymdev/react-native-electrum-client#a32a292d4e4918a04d280137e24e5961c74c543f",
+    "rn-qr-generator": "^1.2.1",
     "stream-browserify": "^3.0.0",
     "vm-browserify": "^1.1.2"
   },

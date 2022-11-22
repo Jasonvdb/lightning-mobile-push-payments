@@ -1,5 +1,6 @@
 import Keychain from 'react-native-keychain';
-import { TAccount, TAvailableNetworks } from '@synonymdev/react-native-ldk';
+import { TAccount, TAvailableNetworks, TCreatePaymentReq, ENetworks } from '@synonymdev/react-native-ldk';
+import ldk from '@synonymdev/react-native-ldk/dist/ldk';
 import { getItem, setItem } from '../ldk';
 import { EAccount } from './types';
 import { err, ok, Result } from './result';
@@ -9,7 +10,21 @@ import { selectedNetwork } from './constants';
 import RNFS from 'react-native-fs';
 import * as bip32 from 'bip32';
 import * as bip39 from 'bip39';
-import { ENetworks } from '@synonymdev/react-native-ldk/dist/utils/types';
+
+export const createPaymentRequestWithNotificationHook = async (req: TCreatePaymentReq, pushToken: string) => {
+	if (!pushToken) {
+		return err("Register for push notifications first.");
+	}
+
+	try {
+		const response = await fetch(`http://192.168.0.105:8000/register?token=${pushToken}`);
+		const {result: hook} = await response.json();
+
+		return await ldk.createPaymentRequest({...req, description: `${req.description} {${hook}}`});
+	} catch (e) {
+		return err(e);
+	}
+}
 
 /**
  * Use Keychain to save LDK name & seed.

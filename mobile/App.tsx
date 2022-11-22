@@ -11,6 +11,8 @@ import {
 	Text,
 	View,
 	AppState,
+	Image,
+	Dimensions,
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {
@@ -21,6 +23,7 @@ import {
 	getAddressBalance,
 	updateHeader,
 } from './ldk';
+import RNQRGenerator from 'rn-qr-generator';
 import { connectToElectrum, subscribeToHeader } from './electrum';
 import ldk from '@synonymdev/react-native-ldk/dist/ldk';
 import lm, {
@@ -30,13 +33,18 @@ import lm, {
 } from '@synonymdev/react-native-ldk';
 import { peers } from './utils/constants';
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
+import {createPaymentRequestWithNotificationHook} from './utils/helpers';
 
 let paymentSubscription: EmitterSubscription | undefined;
 let onChannelSubscription: EmitterSubscription | undefined;
 
+const qrSize = Dimensions.get('window').width * 0.9 - 10;
+
 const App = (): ReactElement => {
 	const [message, setMessage] = useState('...');
+	const [pushToken, setPushToken] = useState('');
 	const [nodeStarted, setNodeStarted] = useState(false);
+	const [qr, setQr] = useState('');
 
 	const appState = useRef(AppState.currentState);
   	const [appStateVisible, setAppStateVisible] = useState(appState.current);
@@ -61,6 +69,7 @@ const App = (): ReactElement => {
 			setMessage(setupResponse.value);
 			}, 1000)
 		  } else {
+			setQr('');
 			ldk.reset().catch(console.error);
 		  }
 	
@@ -147,6 +156,7 @@ const App = (): ReactElement => {
 		const type = 'register';
 		PushNotificationIOS.addEventListener(type, (token) => {
 		  console.log(`Push token: ${token}`);	
+		  setPushToken(token);
 		  setMessage('Registered for push notifications');
 		});
 		
@@ -274,11 +284,11 @@ const App = (): ReactElement => {
 						title={'Create invoice'}
 						onPress={async (): Promise<void> => {
 							try {
-								const createPaymentRequest = await ldk.createPaymentRequest({
+								const createPaymentRequest = await createPaymentRequestWithNotificationHook({
 									amountSats: 123,//TODO remove and let sender choose
-									description: 'TODO push url',
+									description: 'Tip me!',
 									expiryDeltaSeconds: 60 * 60,
-								});
+								}, pushToken);
 
 								if (createPaymentRequest.isErr()) {
 									setMessage(createPaymentRequest.error.message);
@@ -287,13 +297,26 @@ const App = (): ReactElement => {
 
 								const { to_str } = createPaymentRequest.value;
 								console.log(to_str);
-								Clipboard.setString(to_str);
-								setMessage(to_str);
+
+								RNQRGenerator.generate({
+									value: to_str,
+									height: qrSize,
+									width: qrSize,
+									correctionLevel: 'M'
+								  })
+									.then(response => {
+									  const { uri } = response;
+									  setQr(uri);
+									})
+									.catch(error => console.log('Cannot create QR code', error));
+									
 							} catch (e) {
 								setMessage(e.toString());
 							}
 						}}
 					/>
+
+					{qr ? <View style={{backgroundColor: 'white', padding: 5}}><Image source={{uri: qr}} style={{height: qrSize, width: qrSize}} /></View> : null}
 
 					<Button
 						title={'Pay invoice'}
