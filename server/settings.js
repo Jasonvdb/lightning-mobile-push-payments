@@ -24,4 +24,10 @@ const defaultPaymentAlert = {
 
 const appBundleID = 'to.synonym.LnPushPayments';
 
-module.exports = {host, port, pushSettings, defaultPaymentAlert, appBundleID};
+const electrumConfig = {
+    port: 50001,
+    server: '192.168.0.105',
+    protocol: 'tcp' //tcp or tls
+}
+
+module.exports = {host, port, pushSettings, defaultPaymentAlert, appBundleID, electrumConfig};

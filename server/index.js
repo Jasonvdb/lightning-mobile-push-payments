@@ -1,43 +1,26 @@
 const PushNotifications = require('node-pushnotifications');
 const http = require("http");
-var url = require('url');
+const url = require('url');
 
-const { pushSettings, defaultPaymentAlert, appBundleID, host, port } = require('./settings');
+const { pushSettings, host, port } = require('./settings');
+const { justTheTip, fancyGuid, createPushData } = require('./helpers');
 
 const push = new PushNotifications(pushSettings);
 const fancyDb = {};
-const fancyGuid = () => {
-    let firstPart = (Math.random() * 46656) | 0;
-    let secondPart = (Math.random() * 46656) | 0;
-    firstPart = ("000" + firstPart.toString(36)).slice(-3);
-    secondPart = ("000" + secondPart.toString(36)).slice(-3);
-    return firstPart + secondPart;
-}
 
-const blockData = {
-    height: 364,
-    header: '00000030d6060261674709d9d6e63031dc7e9f5f2e98fe16d10f7e300a3fbb03122ca33ef5f8ca628bc2aeb6803c1427664c5fd76a1f9652c9f693c868913a3a8c084a2c11967a63ffff7f2000000000'
+let currentBlockData = {
+    height: 0,
+    header: ''
 };
 
-const payload = {
-    type: 'payment', //"payment" or "channel"
-    ...blockData
-}
-
-const pushData = {
-    topic: appBundleID,
-    title: defaultPaymentAlert.title,
-    body: defaultPaymentAlert.body,
-    alert: { // iOS only
-        ...defaultPaymentAlert,
-        payload
-    },
-    priority: 'high',
-    contentAvailable: 12,
-    mutableContent: 1, // tells iOS to spin up app extension with LDK
-    badge: 1,
-    sound: 'ping.aiff',
-};
+//Keep current block header up to date
+justTheTip(({hex, height}) => {
+    currentBlockData = {
+        header: hex,
+        height
+    };
+    console.log(`New block: ${height}`);
+});
 
 const requestListener = (req, res) => {
     res.setHeader('Content-Type', 'application/json');
@@ -68,11 +51,16 @@ const requestListener = (req, res) => {
     }
 
     if (deviceToken) {
-        push.send([deviceToken], pushData)
+        const data = createPushData({
+            type: 'payment', //"payment" or "channel"
+            ...currentBlockData
+        });
+
+        push.send(deviceToken, data)
             .then((results) => { 
                 delete fancyDb[guid];
 
-                if (results.success) {
+                if (results[0].success) {
                     console.log('SENT!');
                     res.writeHead(200);
                     res.end(JSON.stringify({result: 'notified'}));
