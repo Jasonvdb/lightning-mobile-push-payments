@@ -54,6 +54,7 @@ const App = (): ReactElement => {
 	const [nodeStarted, setNodeStarted] = useState(false);
 	const [invoiceQr, setInvoiceQr] = useState('');
 	const [showScanner, setShowScanner] = useState(false);
+	const [sentSats, setSentSats] = useState(0);
 
 	const appState = useRef(AppState.currentState);
   	const [appStateVisible, setAppStateVisible] = useState(appState.current);
@@ -263,7 +264,8 @@ const App = (): ReactElement => {
 						return setMessage(pay.error.message);
 					}
 
-					setMessage("Will keep trying...");
+					setSentSats(sats);
+					setMessage("Sent!");
 				}
 			  }
 			],
@@ -283,6 +285,8 @@ const App = (): ReactElement => {
 			// total += unspendable_punishment_reserve ?? 0;
 			total += (channel_value_satoshis - inbound_capacity_sat) - (unspendable_punishment_reserve ?? 0);
 		});
+
+		total - sentSats;
 
 		setBalance(`${total} sats`);
 	}

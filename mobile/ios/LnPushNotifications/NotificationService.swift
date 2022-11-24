@@ -34,48 +34,38 @@ class NotificationService: UNNotificationServiceExtension {
       return contentHandler(bestAttemptContent)
     }
     
-//    contentHandler(bestAttemptContent)
-//    return;
-    
+    var complete = false
     ldk.start(header: header, height: height) { channelId in
       bestAttemptContent.title = "Channel opened"
       bestAttemptContent.body = "\(channelId)"
-//      sleep(3)
-//      self.ldk.reset()
-//      contentHandler(bestAttemptContent)
+      complete = true
     } onPayment: { sats in
       bestAttemptContent.title = "Payment received"
       bestAttemptContent.body = "\(sats) sats ⚡"
-//      sleep(5)
-//      self.ldk.reset()
-//      sleep(2)
-//      contentHandler(bestAttemptContent)
+      complete = true
     } onError: { errorMessage in
       bestAttemptContent.title = "Lightning error"
       bestAttemptContent.body = "\(errorMessage)"
-//      sleep(5)
-//      self.ldk.reset()
-//      contentHandler(bestAttemptContent)
+      complete = true
     }
     
-    var countdown = 20
+    //Keep checking state, once complete wait a few seconds for LDK to complete any persistance and then shutdown to deliver notification
+    var timeout = 25
     while true {
-      if bestAttemptContent.body != "Please open app and ask sender to try again." {
+      sleep(1)
+      if complete {
         sleep(3)
         ldk.reset()
         contentHandler(bestAttemptContent)
         break
       }
-      countdown -= 1
-      if countdown < 0 {
+      timeout -= 1
+      if timeout < 0 {
         break
       }
-      sleep(1)
     }
     
     ldk.reset()
-
-//    bestAttemptContent.body = "Timed out"
     contentHandler(bestAttemptContent)
   }
   
@@ -83,7 +73,6 @@ class NotificationService: UNNotificationServiceExtension {
     ldk.reset()
 
     if let contentHandler = contentHandler, let bestAttemptContent =  bestAttemptContent {
-        bestAttemptContent.title = "\(bestAttemptContent.title) [Payment failed]"
         contentHandler(bestAttemptContent)
     }
   }

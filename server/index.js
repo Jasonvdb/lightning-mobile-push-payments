@@ -63,7 +63,7 @@ const requestListener = (req, res) => {
                 if (results[0].success) {
                     console.log('SENT!');
                     res.writeHead(200);
-                    res.end(JSON.stringify({result: 'notified'}));
+                    res.end(JSON.stringify({result: 'notified', delay: 15000}));
                     return;
                 }
 

@@ -59,12 +59,12 @@ export const payInvoiceWithNotification = async (req: TPaymentReq): Promise<Resu
 
 	try {
 		const response = await fetch(hook);
-		const {error} = await response.json();
+		const {error, delay} = await response.json();
 		if (error) {
 			return err(`Error waking up receipient: ${error}`);
 		}
 
-		await sleep(15000);
+		await sleep(delay);
 
 		const res1 = await ldk.pay(req);
 		if (res1.isOk()) {
