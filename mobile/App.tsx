@@ -29,22 +29,31 @@ import ldk from '@synonymdev/react-native-ldk/dist/ldk';
 import lm, {
 	EEventTypes,
 	TChannelManagerPayment,
+	TChannelManagerPaymentFailed,
+	TChannelManagerPaymentPathSuccessful,
+	TChannelManagerPaymentSent,
 	TChannelUpdate,
 } from '@synonymdev/react-native-ldk';
 import { peers } from './utils/constants';
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
-import {createPaymentRequestWithNotificationHook} from './utils/helpers';
+import { CameraScreen } from 'react-native-camera-kit';
+import {createPaymentRequestWithNotificationHook, getInvoiceDescription, getInvoiceDescriptionWithoutHook, payInvoiceWithNotification, setAccount} from './utils/helpers';
 
 let paymentSubscription: EmitterSubscription | undefined;
+let sentSubscription: EmitterSubscription | undefined;
+let paymentPathSuccessSubscription: EmitterSubscription | undefined;
+let sendFailSubscription: EmitterSubscription | undefined;
 let onChannelSubscription: EmitterSubscription | undefined;
 
 const qrSize = Dimensions.get('window').width * 0.9 - 10;
 
 const App = (): ReactElement => {
 	const [message, setMessage] = useState('...');
+	const [balance, setBalance] = useState('');
 	const [pushToken, setPushToken] = useState('');
 	const [nodeStarted, setNodeStarted] = useState(false);
-	const [qr, setQr] = useState('');
+	const [invoiceQr, setInvoiceQr] = useState('');
+	const [showScanner, setShowScanner] = useState(false);
 
 	const appState = useRef(AppState.currentState);
   	const [appStateVisible, setAppStateVisible] = useState(appState.current);
@@ -69,7 +78,8 @@ const App = (): ReactElement => {
 			setMessage(setupResponse.value);
 			}, 1000)
 		  } else {
-			setQr('');
+			setInvoiceQr('');
+			setBalance('');
 			ldk.reset().catch(console.error);
 		  }
 	
@@ -89,6 +99,8 @@ const App = (): ReactElement => {
 		}
 
 		(async (): Promise<void> => {
+			await PushNotificationIOS.requestPermissions();
+
 			// Connect to Electrum Server
 			const electrumResponse = await connectToElectrum({});
 			if (electrumResponse.isErr()) {
@@ -130,8 +142,48 @@ const App = (): ReactElement => {
 			// @ts-ignore
 			paymentSubscription = ldk.onEvent(
 				EEventTypes.channel_manager_payment_claimed,
-				(res: TChannelManagerPayment) =>
-					alert(`Received ${res.amount_sat} sats`),
+				(res: TChannelManagerPayment) => {
+					alert(`Received ${res.amount_sat} sats`);
+					setInvoiceQr('');
+					updateBalance();
+				},
+			);
+		}
+
+		if (!sentSubscription) {
+			// @ts-ignore
+			paymentSubscription = ldk.onEvent(
+				EEventTypes.channel_manager_payment_sent,
+				(res: TChannelManagerPaymentSent) => {
+					alert(`Sent! Fee: ${res.fee_paid_sat} sats`);
+					setMessage('');
+					updateBalance();
+				},
+			);
+		}
+
+		if (!paymentPathSuccessSubscription) {
+			// @ts-ignore
+			paymentSubscription = ldk.onEvent(
+				EEventTypes.channel_manager_payment_path_successful,
+				(res: TChannelManagerPaymentPathSuccessful) => {
+					alert(`Payment path success!`);
+					setMessage('');
+					updateBalance();
+				},
+			);
+		}
+		
+
+		if (!sendFailSubscription) {
+			// @ts-ignore
+			sendFailSubscription = ldk.onEvent(
+				EEventTypes.channel_manager_payment_failed,
+				(res: TChannelManagerPaymentFailed) => {
+					alert(`Payment failed`);
+					setMessage('');
+					updateBalance();
+				},
 			);
 		}
 
@@ -139,15 +191,20 @@ const App = (): ReactElement => {
 			// @ts-ignore
 			onChannelSubscription = ldk.onEvent(
 				EEventTypes.new_channel,
-				(res: TChannelUpdate) =>
+				(res: TChannelUpdate) => {
 					alert(
 						`Channel received from ${res.counterparty_node_id} Channel ${res.channel_id}`,
-					),
+					);
+					updateBalance();
+				}
 			);
 		}
 
 		return (): void => {
 			paymentSubscription && paymentSubscription.remove();
+			sentSubscription && sentSubscription.remove();
+			paymentPathSuccessSubscription && paymentPathSuccessSubscription.remove();
+			sendFailSubscription && sendFailSubscription.remove();
 			onChannelSubscription && onChannelSubscription.remove();
 		};
 	}, []);
@@ -165,6 +222,71 @@ const App = (): ReactElement => {
 		};
 	  });
 
+	useEffect(() => {
+		const interval = setInterval(updateBalance, 250);
+		return () => clearInterval(interval);
+	});
+
+	const handleQr = async (event: any): Promise<void> => {
+		setShowScanner(false);
+
+		const paymentRequest = event.nativeEvent.codeStringValue;
+		const decode = await ldk.decode({ paymentRequest });
+		if (decode.isErr()) {
+			return setMessage(decode.error.message);
+		}
+
+		const { recover_payee_pub_key, amount_satoshis } = decode.value;
+		console.log(decode.value);
+		const description = getInvoiceDescriptionWithoutHook(paymentRequest);
+
+		Alert.prompt(
+			"Amount",
+			description,
+			[
+			  {
+				text: "Cancel",
+				onPress: () => console.log("Cancel Pressed"),
+				style: "cancel"
+			  },
+			  {
+				text: "Pay",
+				onPress: async (sats) => {
+					const ownAmountSats = Number(sats);
+
+					setMessage('Paying...');
+					const pay = await payInvoiceWithNotification({
+						paymentRequest,
+						amountSats: ownAmountSats,
+					});
+					if (pay.isErr()) {
+						return setMessage(pay.error.message);
+					}
+
+					setMessage("Will keep trying...");
+				}
+			  }
+			],
+			"plain-text"
+		  );
+	};	
+
+	const updateBalance = async () => {
+		let total = 0;
+		const listChannels = await ldk.listChannels();
+		if (listChannels.isErr()) {
+			setBalance('');
+			return;
+		}
+
+		listChannels.value.forEach(({channel_value_satoshis, outbound_capacity_sat, inbound_capacity_sat, unspendable_punishment_reserve, is_channel_ready, is_usable}) => {
+			// total += unspendable_punishment_reserve ?? 0;
+			total += (channel_value_satoshis - inbound_capacity_sat) - (unspendable_punishment_reserve ?? 0);
+		});
+
+		setBalance(`${total} sats`);
+	}
+
 	return (
 		<SafeAreaView style={styles.container}>
 			<ScrollView
@@ -172,7 +294,8 @@ const App = (): ReactElement => {
 				style={styles.scrollView}>
 				<Text style={styles.text}>LN push</Text>
 				<View style={styles.messageContainer}>
-					<Text style={styles.text}>{message}</Text>
+				<Text style={styles.balanceText}>{balance}</Text>
+				<Text style={styles.text}>{message}</Text>
 				</View>
 				<View style={styles.container}>
 					<Button
@@ -193,6 +316,7 @@ const App = (): ReactElement => {
 					<Button
 						title={'Sync LDK'}
 						onPress={async (): Promise<void> => {
+							// setAccount({name: 'wallet0'});
 							const syncRes = await syncLdk();
 							if (syncRes.isErr()) {
 								setMessage(syncRes.error.message);
@@ -258,10 +382,11 @@ const App = (): ReactElement => {
 
 								let msg = '';
 
-								listChannels.value.forEach(({channel_id, outbound_capacity_sat, inbound_capacity_sat, is_channel_ready, is_usable}) => {
+								listChannels.value.forEach(({channel_id, outbound_capacity_sat, inbound_capacity_sat, unspendable_punishment_reserve, is_channel_ready, is_usable}) => {
 									msg = `${msg}${channel_id}\n`
 									msg = `${msg}Can spend: ${outbound_capacity_sat} sats\n`
 									msg = `${msg}Can receive: ${inbound_capacity_sat} sats\n`
+									msg = `${msg}Reserve: ${unspendable_punishment_reserve} sats\n`
 									msg = `${msg}Ready: ${is_channel_ready ? '✅' : '❌'}\n`
 									msg = `${msg}Usable: ${is_usable ? '✅' : '❌'}\n\n`
 								});
@@ -272,20 +397,65 @@ const App = (): ReactElement => {
 							}
 						}}
 					/>
-					
+
 					<Button
-						title={'Register for push notifications'}
+						title={'Close channel'}
 						onPress={async (): Promise<void> => {
-							PushNotificationIOS.requestPermissions();
+							try {
+								const listChannels = await ldk.listChannels();
+								if (listChannels.isErr()) {
+									setMessage(listChannels.error.message);
+									return;
+								}
+								if (listChannels.value.length < 1) {
+									setMessage('No channels detected.');
+									return;
+								}
+
+								const { channel_id, counterparty_node_id } =
+									listChannels.value[0];
+
+								const close = async (force: boolean): Promise<void> => {
+									setMessage(`Closing ${channel_id}...`);
+
+									const res = await ldk.closeChannel({
+										channelId: channel_id,
+										counterPartyNodeId: counterparty_node_id,
+										force,
+									});
+									if (res.isErr()) {
+										setMessage(res.error.message);
+										return;
+									}
+									setMessage(res.value);
+								};
+
+								Alert.alert('Close channel', `Peer ${counterparty_node_id}`, [
+									{
+										text: 'Cancel',
+										onPress: () => console.log('Cancel Pressed'),
+										style: 'cancel',
+									},
+									{
+										text: 'Close channel',
+										onPress: async (): Promise<void> => close(false),
+									},
+									{
+										text: 'Force close',
+										onPress: async (): Promise<void> => close(true),
+									},
+								]);
+							} catch (e) {
+								setMessage(e.toString());
+							}
 						}}
-					/> 
+					/>
 					
 					<Button
 						title={'Create invoice'}
 						onPress={async (): Promise<void> => {
 							try {
 								const createPaymentRequest = await createPaymentRequestWithNotificationHook({
-									amountSats: 123,//TODO remove and let sender choose
 									description: 'Tip me!',
 									expiryDeltaSeconds: 60 * 60,
 								}, pushToken);
@@ -306,7 +476,7 @@ const App = (): ReactElement => {
 								  })
 									.then(response => {
 									  const { uri } = response;
-									  setQr(uri);
+									  setInvoiceQr(uri);
 									})
 									.catch(error => console.log('Cannot create QR code', error));
 									
@@ -316,57 +486,17 @@ const App = (): ReactElement => {
 						}}
 					/>
 
-					{qr ? <View style={{backgroundColor: 'white', padding: 5}}><Image source={{uri: qr}} style={{height: qrSize, width: qrSize}} /></View> : null}
+					{invoiceQr ? 
+					<View style={{backgroundColor: 'white', padding: 5}}>
+						<Image source={{uri: invoiceQr}} style={{height: qrSize, width: qrSize}} />
+					</View> : null}
 
+					<Button title={`${showScanner ? 'Hide' : 'Show'} scanner`} onPress={() => setShowScanner(!showScanner)} />
+					
 					<Button
-						title={'Pay invoice'}
+						title={'Show balances'}
 						onPress={async (): Promise<void> => {
-							const paymentRequest = 'TODO';
-							const decode = await ldk.decode({ paymentRequest });
-							if (decode.isErr()) {
-								return setMessage(decode.error.message);
-							}
-
-							const { recover_payee_pub_key, amount_satoshis } = decode.value;
-
-							const ownAmountSats = 1000;
-							Alert.alert(
-								amount_satoshis
-									? `Pay ${amount_satoshis ?? 0}`
-									: 'Zero sat invoice found',
-								amount_satoshis
-									? `To pubkey: ${recover_payee_pub_key}`
-									: `Send ${ownAmountSats} sats (Our chosen amount) to send over?`,
-								[
-									{
-										text: 'Cancel',
-										onPress: () => console.log('Cancel Pressed'),
-										style: 'cancel',
-									},
-									{
-										text: 'Pay',
-										onPress: async (): Promise<void> => {
-											const pay = await lm.payWithTimeout({
-												paymentRequest,
-												amountSats: amount_satoshis ? undefined : ownAmountSats,
-												timeout: 20000,
-											});
-											if (pay.isErr()) {
-												return setMessage(pay.error.message);
-											}
-
-											setMessage(pay.value.payment_id);
-										},
-									},
-								],
-							);
-						}}
-					/>
-
-					<Button
-						title={'Show claimable balances for closed/closing channels'}
-						onPress={async (): Promise<void> => {
-							const balances = await ldk.claimableBalances(false);
+							const balances = await ldk.claimableBalances(true);
 							if (balances.isErr()) {
 								return setMessage(balances.error.message);
 							}
@@ -374,6 +504,16 @@ const App = (): ReactElement => {
 							setMessage(JSON.stringify(balances.value));
 						}}
 					/>
+					
+					{showScanner ? <View style={{height: 200, width: 200}}>
+						<CameraScreen
+						scanBarcode={true}
+						onReadCode={handleQr} // optional
+						showFrame={true} // (default false) optional, show frame with transparent layer (qr code or barcode will be read on this area ONLY), start animation for scanner,that stoped when find any code. Frame always at center of the screen
+						laserColor='red' // (default red) optional, color of laser in scanner frame
+						frameColor='white' // (default white) optional, color of border of scanner frame
+						/>
+					</View>: null}
 				</View>
 			</ScrollView>
 		</SafeAreaView>
@@ -393,6 +533,11 @@ const styles = StyleSheet.create({
 		minHeight: 120,
 		marginHorizontal: 20,
 		justifyContent: 'center',
+	},
+	balanceText: {
+		color: 'green',
+		fontSize: 40,
+		textAlign: 'center'
 	},
 	text: {
 		textAlign: 'center',

@@ -1,5 +1,5 @@
 import Keychain from 'react-native-keychain';
-import { TAccount, TAvailableNetworks, TCreatePaymentReq, ENetworks } from '@synonymdev/react-native-ldk';
+import { TAccount, TAvailableNetworks, TCreatePaymentReq, ENetworks, TPaymentReq } from '@synonymdev/react-native-ldk';
 import ldk from '@synonymdev/react-native-ldk/dist/ldk';
 import { getItem, setItem } from '../ldk';
 import { EAccount } from './types';
@@ -10,6 +10,8 @@ import { selectedNetwork } from './constants';
 import RNFS from 'react-native-fs';
 import * as bip32 from 'bip32';
 import * as bip39 from 'bip39';
+import lightningPayReq from 'bolt11';
+import { Alert } from 'react-native';
 
 export const createPaymentRequestWithNotificationHook = async (req: TCreatePaymentReq, pushToken: string) => {
 	if (!pushToken) {
@@ -24,6 +26,73 @@ export const createPaymentRequestWithNotificationHook = async (req: TCreatePayme
 	} catch (e) {
 		return err(e);
 	}
+}
+
+export const getInvoiceDescription = (invoice: string): string => {
+	let description = '';
+	const {tags} = lightningPayReq.decode(invoice);
+	tags.forEach(({data, tagName}) => {
+		if (tagName === 'description') {
+			description = data.toString();
+		}
+	});
+
+	return description;
+}
+
+export const getInvoiceDescriptionWithoutHook = (invoice: string): string => {
+	const description = getInvoiceDescription(invoice);
+	return description.substring(0, description.indexOf('{'));
+}
+
+export const getHookFromInvoice = (invoice: string): string => {
+	const description = getInvoiceDescription(invoice);
+
+	return description.substring(
+		description.indexOf("{") + 1, 
+		description.lastIndexOf("}")
+	);
+}
+
+export const payInvoiceWithNotification = async (req: TPaymentReq): Promise<Result<string>> => {
+	const hook = getHookFromInvoice(req.paymentRequest);
+
+	try {
+		const response = await fetch(hook);
+		const {error} = await response.json();
+		if (error) {
+			return err(`Error waking up receipient: ${error}`);
+		}
+
+		await sleep(15000);
+
+		const res1 = await ldk.pay(req);
+		if (res1.isOk()) {
+			return ok(res1.value);
+		}
+
+		// await sleep(5000);
+
+		// const res2 = await ldk.pay(req);
+		// if (res2.isOk()) {
+		// 	return ok(res2.value);
+		// }
+
+		// await sleep(5);
+
+		// const res3 = await ldk.pay(req);
+		// if (res3.isOk()) {
+		// 	return ok(res3.value);
+		// }
+
+		return err(res1.error);
+	} catch (e) {
+		return err("Error: " + JSON.stringify(e));
+	}
+}
+
+const sleep = (ms: number) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**

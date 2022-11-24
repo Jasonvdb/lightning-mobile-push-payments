@@ -34,25 +34,49 @@ class NotificationService: UNNotificationServiceExtension {
       return contentHandler(bestAttemptContent)
     }
     
+//    contentHandler(bestAttemptContent)
+//    return;
+    
     ldk.start(header: header, height: height) { channelId in
       bestAttemptContent.title = "Channel opened"
       bestAttemptContent.body = "\(channelId)"
-      sleep(3)
+//      sleep(3)
 //      self.ldk.reset()
-      contentHandler(bestAttemptContent)
+//      contentHandler(bestAttemptContent)
     } onPayment: { sats in
       bestAttemptContent.title = "Payment received"
       bestAttemptContent.body = "\(sats) sats ⚡"
-      sleep(5)
+//      sleep(5)
 //      self.ldk.reset()
-      contentHandler(bestAttemptContent)
+//      sleep(2)
+//      contentHandler(bestAttemptContent)
     } onError: { errorMessage in
       bestAttemptContent.title = "Lightning error"
       bestAttemptContent.body = "\(errorMessage)"
-      sleep(5)
+//      sleep(5)
 //      self.ldk.reset()
-      contentHandler(bestAttemptContent)
+//      contentHandler(bestAttemptContent)
     }
+    
+    var countdown = 20
+    while true {
+      if bestAttemptContent.body != "Please open app and ask sender to try again." {
+        sleep(3)
+        ldk.reset()
+        contentHandler(bestAttemptContent)
+        break
+      }
+      countdown -= 1
+      if countdown < 0 {
+        break
+      }
+      sleep(1)
+    }
+    
+    ldk.reset()
+
+//    bestAttemptContent.body = "Timed out"
+    contentHandler(bestAttemptContent)
   }
   
   override func serviceExtensionTimeWillExpire() {

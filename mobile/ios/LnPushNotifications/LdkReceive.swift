@@ -68,14 +68,13 @@ class LdkReceive {
         persister: persister
     )
 
-    print("Creating new channel manager")
-    let blockHash = "2223513fd485a4459804fe6c9b6a2b1ed73e025dfb968e28db2a2e4e0caaf3ec"
-    let blockHeight = 155
-    ldkNetwork = LDKNetwork_Regtest
+    print("Restoring channel manager")
+    ldkNetwork = LDKNetwork_Regtest //TODO move to payload
     let minChannelHandshakeDepth = 1
     let announcedChannels = false
     
     //Polar node
+    //TODO move to payload
     let pubKey = "0242c4451deb6266c2cf4593b891597529b73b1d2f98f7994a0ef420bfe1fd9b6c"
     let address = "192.168.0.105"
     let port = 9735
@@ -147,10 +146,16 @@ class LdkReceive {
       LdkReceive.channelManager!.as_Confirm().best_block_updated(header: header.hexaBytes, height: UInt32(height))
       chainMonitor!.as_Confirm().best_block_updated(header: header.hexaBytes, height: UInt32(height))
       
+      if let channel = LdkReceive.channelManager!.list_channels().first {
+        print("Channel ready: \(channel.get_is_channel_ready()) \nChannel Usable: \(channel.get_is_usable())")
+      }
+      
       sleep(10)
 
       if let channel = LdkReceive.channelManager!.list_channels().first {
         print("Channel ready: \(channel.get_is_channel_ready()) \nChannel Usable: \(channel.get_is_usable())")
+      } else {
+        onError("No channels")
       }
       
 //      onError("Channels: \(LdkReceive.channelManager!.list_channels().count)")
@@ -185,7 +190,7 @@ class LdkLogger: Logger {
     override func log(record: Record) {
       let level = record.get_level().rawValue
       if level != 0 && level != 1 { //Ignore gossip and debug
-        print(record.get_args())
+        print("LDK: \(record.get_args())")
       }
     }
 }
@@ -287,13 +292,15 @@ class LdkChannelManagerPersister: Persister, ExtendedChannelManagerPersister {
           //TODO end service
           
           LdkReceive.onPayment(Int(paymentReceived.getAmount_msat() / 1000))
-            return
+          print("HERE1")
+          return
         
         case .PaymentForwarded:
           return
         case .PendingHTLCsForwardable:
           let pendingHTLCsForwardable = event.getValueAsPendingHTLCsForwardable()!
                       
+          print("HERE2")
           LdkReceive.channelManager?.process_pending_htlc_forwards()
           return
         
@@ -313,6 +320,8 @@ class LdkChannelManagerPersister: Persister, ExtendedChannelManagerPersister {
 //            ]
           
           //TODO end service
+          
+          print("HERE3")
         
           //Unused channel events
         case .PaymentSent: break

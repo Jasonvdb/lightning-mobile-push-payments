@@ -15,10 +15,16 @@ const justTheTip = async (onUpdate) => {
     try{
         const tip = await ecl.blockchainHeaders_subscribe()
         onUpdate(tip);
-    }catch(e){
+    } catch(e){
         console.error("Failed to subscribe to block header");
         console.log(e)
         process.exit(1);
+    }
+
+    while (true) {
+        //Keep connection alive
+        await ecl.request('server.ping');
+        await new Promise(resolve => setTimeout(resolve, 5000));
     }
 };
 

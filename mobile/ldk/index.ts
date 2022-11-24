@@ -64,7 +64,6 @@ export const setItem = async (key = '', value = ''): Promise<void> => {
  */
 export const getBestBlock = async (): Promise<THeader> => {
 	const bestBlock = await getItem('header');
-	console.warn(JSON.parse(bestBlock));
 	return bestBlock ? JSON.parse(bestBlock) : { height: 0, hex: '', hash: '' };
 };
 

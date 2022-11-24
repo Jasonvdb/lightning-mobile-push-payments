@@ -55,5 +55,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+  <key>NSCameraUsageDescription</key>
+  <string>For scanning invoices</string>
 </dict>
 </plist>
