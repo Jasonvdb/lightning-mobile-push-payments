@@ -46,7 +46,7 @@ const createPushData = (payload) => {
             payload
         },
         priority: 'high',
-        contentAvailable: 12,
+        contentAvailable: 1,
         mutableContent: 1, // tells iOS to spin up app extension with LDK
         badge: 1,
         sound: 'ping.aiff',

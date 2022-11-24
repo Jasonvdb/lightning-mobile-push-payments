@@ -19,7 +19,7 @@ export const createPaymentRequestWithNotificationHook = async (req: TCreatePayme
 	}
 
 	try {
-		const response = await fetch(`http://192.168.0.105:8000/register?token=${pushToken}`);
+		const response = await fetch(`http://192.168.0.105:8000/register?token=${pushToken}&time=${new Date().getTime()}`);
 		const {result: hook} = await response.json();
 
 		return await ldk.createPaymentRequest({...req, description: `${req.description} {${hook}}`});
