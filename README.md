@@ -6,6 +6,8 @@ One of the largest UX barriers to non-custodial mobile lightning payments is onl
 
 LnPush allows recipients to add a webhook to their invoices which enables senders to wake up the recipient's app in the background to come online and receive the payment.
 
+Demo: https://youtu.be/bouWwl_hQZA
+
 ![image info](https://github.com/Jasonvdb/lightning-mobile-push-payments/blob/main/screenshot.jpg)
 
 ## How it works
